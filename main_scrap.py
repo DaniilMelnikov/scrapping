@@ -2,18 +2,18 @@ import requests
 
 from bs4 import BeautifulSoup
 
-from pprint import pprint
-
 import re
 
-KEYWORDS = ['дизайн', 'фото', 'web', 'python']
+KEYWORDS = ['дизайн', 'фото', 'API', 'Python', 'CEO', 'ML', 'HR', 'PHP']
 
 resp = requests.get('https://habr.com/ru/all/')
 resp.raise_for_status()
 
 def print_list(string):
+    result = re.sub(r'(\<)\/*(\w+\s*\S*\w+\s*\S*)(\>)', '', string, 0, re.MULTILINE)
     for word in KEYWORDS:
-        if word in string:
+        search_word = re.findall(word, result)
+        if len(search_word) > 0:
             print(f'{data[0]}, {header.text}, {href}')
 
 soup = BeautifulSoup(resp.text, 'html.parser')
@@ -22,14 +22,13 @@ for article in articles:
     time = str(article.find('time'))
     data = re.search('\d+\-\d+\-\d+', time)
     header = article.find('h2')
-    snippet_v1 = article.find('div', class_='article-formatted-body article-formatted-body_version-1')
-    snippet_v2 = article.find('div', class_='article-formatted-body article-formatted-body_version-2')
     href = header.find('a')
     reg_href = re.search('\"\/\w+\/\w+\/.+\/\"', str(href))
     href = re.sub('\"(\/\w+\/\w+\/.+\/)\"', 'https://habr.com\\1', reg_href[0])
-
-    print_list(str(snippet_v1))
-    print_list(str(snippet_v2))
-
-
-    
+    text = article.find(class_='article-formatted-body article-formatted-body_version-1')
+    if text == None:
+        text = article.find(class_='article-formatted-body article-formatted-body_version-2')
+        if text != None:
+            print_list(str(text))
+    else:
+        print_list(str(text))
